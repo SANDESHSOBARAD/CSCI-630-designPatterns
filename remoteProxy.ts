@@ -1,36 +1,53 @@
-interface RemoteData {
-  getData(): Promise<string>;
+interface Repo {
+  id: number;
+  name: string;
+  full_name: string;
+  html_url: string;
 }
 
-class RemoteDataProxy implements RemoteData {
-  private realData: RealRemoteData;
+class GitHubAPI implements Repo{
+  id: number;
+  name: string;
+  full_name: string;
+  html_url: string;
 
-  constructor(private readonly endpoint: string) {}
+  constructor(data: Repo) {
+    this.id = data.id;
+    this.name = data.name;
+    this.full_name = data.full_name;
+    this.html_url = data.html_url;
+  }
 
-  public async getData(): Promise<string> {
-    if (!this.realData) {
-      // create the real data object here by making a network request
-      const response = await fetch(this.endpoint);
-      const data = await response.text();
-      this.realData = new RealRemoteData(data);
+  async getUserRepos(username: string): Promise<GitHubAPI[]> {
+    const url = `https://api.github.com/users/${username}/repos`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user repos: ${response.statusText}`);
     }
-
-    return this.realData.getData();
+    const repos = await response.json();
+    return repos.map((repo: any) => new GitHubAPI({
+      id: repo.id,
+      name: repo.name,
+      full_name: repo.full_name,
+      html_url: repo.html_url,
+    }));
   }
 }
 
-class RealRemoteData implements RemoteData {
-  constructor(private readonly data: string) {}
+class GitHubAPIProxy {
+  private api = new GitHubAPI({
+    id: 0,
+    name: '',
+    full_name: '',
+    html_url: '',
+  });
 
-  public async getData(): Promise<string> {
-    // perform some processing on the remote data here
-    return this.data.toUpperCase();
+  async getProxyUserRepos(username: string): Promise<GitHubAPI[]> {
+    // Add any additional behavior or validation here
+    return this.api.getUserRepos(username);
   }
 }
 
-// Example usage:
-(async () => {
-  const remoteData = new RemoteDataProxy('https://example.com/data');
-  const data = await remoteData.getData();
-  console.log(data); // logs the remote data in uppercase
-})();
+// Example usage
+const api = new GitHubAPIProxy();
+api.getProxyUserRepos('abhilashSreenivasa').then(repos => console.log(repos));
