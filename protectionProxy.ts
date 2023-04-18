@@ -1,5 +1,8 @@
-/ Real object
-class RealObject {
+interface IData {
+  getData(): string;
+}
+
+class RealObject implements IData {
   private sensitiveData: string;
 
   constructor(sensitiveData: string) {
@@ -12,7 +15,7 @@ class RealObject {
 }
 
 // Protection Proxy
-class ProtectionProxy {
+class ProtectionProxy implements IData {
   private realObject: RealObject;
   private userRole: string;
 
@@ -31,8 +34,8 @@ class ProtectionProxy {
 }
 
 // Client code
-const protectionProxy = new ProtectionProxy('sensitive data', 'admin');
+const protectionProxy: IData = new ProtectionProxy('sensitive data', 'admin');
 console.log(protectionProxy.getData()); // Output: 'sensitive data'
 
-const protectionProxy2 = new ProtectionProxy('sensitive data', 'user');
+const protectionProxy2: IData = new ProtectionProxy('sensitive data', 'user');
 console.log(protectionProxy2.getData()); // Throws an error: 'Access denied. You do not have permission to access this data.'
